@@ -11,9 +11,37 @@ const menuItems = [
       </svg>
     ),
   },
-
-
-
+  {
+    label: "My Recipes",
+    path: "/recipes",
+    icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h16M4 9h16M4 13h10M4 19h16" />
+        <rect x="14" y="15" width="6" height="6" rx="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Meal Plan",
+    path: "/meal-plan",
+    icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="5" width="18" height="16" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+    ),
+  },
+  {
+    label: "Shopping List",
+    path: "/shopping-list",
+    icon: (
+      <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l2.4 12.4a2 2 0 002 1.6h7.2a2 2 0 002-1.6L20 7H6" />
+        <circle cx="9" cy="21" r="1.4" />
+        <circle cx="17" cy="21" r="1.4" />
+      </svg>
+    ),
+  },
 ];
 
 const getUserData = () => {
@@ -77,6 +105,18 @@ const SidebarContent = ({ expanded, onNavigate, isMobile }) => {
   return (
     <div className="h-full flex flex-col">
       <div onClick={() => goTo("/dashboard")} className="flex items-center gap-3 cursor-pointer py-6 px-[18px]">
+        <div
+          className="w-[46px] h-[46px] min-w-[46px] rounded-[14px] flex items-center justify-center"
+          style={{
+            background: "linear-gradient(150deg,#0B5FFF 0%, #0642C4 100%)",
+            boxShadow: "0 10px 22px rgba(11,95,255,.30)",
+          }}
+        >
+          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 3a8 8 0 100 16 8 8 0 000-16zM3 21l4.35-4.35" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 8h6M8 11h4" />
+          </svg>
+        </div>
         <p
           className={`text-[1.3rem] font-extrabold text-[#0B1B3F] whitespace-nowrap overflow-hidden transition-all duration-200 ${
             expanded ? "opacity-100 w-auto" : "opacity-0 w-0"

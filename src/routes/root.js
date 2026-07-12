@@ -3,8 +3,9 @@ import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import Login from '../pages/auth/login';
 import Register from '../pages/auth/register';
 import Dashboard from '../pages/dashboard';
-
+import UserProfile from '../pages/UserProfile';
 import Layout from '../layout/layout'
+import Recipes from '../pages/recipes';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -35,7 +36,8 @@ function Root() {
         }
       >
       <Route path="/dashboard" element={<Dashboard />} />
-  
+      <Route path="/profile" element={<UserProfile />} />
+      <Route path="/recipes" element={<Recipes />} />
        </Route>
     </Routes>
   );
