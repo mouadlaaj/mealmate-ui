@@ -177,3 +177,232 @@ export const deleteRecipe = async (recipeId) => {
   }
 };
 
+export const createMealPlan = async (data) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.post(`${API_URL}/meal-plans`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getMealPlanById = async (mealPlanId) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.get(`${API_URL}/meal-plans/${mealPlanId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAllMealPlans = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.get(`${API_URL}/meal-plans`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateMealPlan = async (mealPlanId, data) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.put(
+      `${API_URL}/meal-plans/${mealPlanId}`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteMealPlan = async (mealPlanId) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.delete(`${API_URL}/meal-plans/${mealPlanId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getShoppingListById = async (shoppingListId) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.get(
+      `${API_URL}/shopping-lists/${shoppingListId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAllShoppingLists = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.get(
+      `${API_URL}/shopping-lists`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateShoppingList = async (
+  shoppingListId,
+  data
+) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.put(
+      `${API_URL}/shopping-lists/${shoppingListId}`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteShoppingList = async (
+  shoppingListId
+) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    await axios.delete(
+      `${API_URL}/shopping-lists/${shoppingListId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return true;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const toggleShoppingListItem = async (
+  shoppingListId,
+  itemId
+) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.patch(
+      `${API_URL}/shopping-lists/${shoppingListId}/items/${itemId}/toggle-complete`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteShoppingListItem = async (
+  shoppingListId,
+  itemId
+) => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.delete(
+      `${API_URL}/shopping-lists/${shoppingListId}/items/${itemId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const searchIngredients = async (search = "") => {
+  try {
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.get(`${API_URL}/ingredients`, {
+      params: {
+        search: search,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

@@ -2,256 +2,244 @@ import React, { useEffect, useState } from "react";
 import { Edit, X, Mail, User, Save, Loader2 } from "lucide-react";
 import { getCurrentUserProfile, updateCurrentUser } from "../services/api";
 
-const ProfileDetail = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 py-2.5">
-    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#EAF2FF] text-[#0B5FFF]">
-      {icon}
-    </div>
-    <div className="min-w-0">
-      <p className="text-[0.72rem] text-[#7C8AA6]">{label}</p>
-      <p className="truncate text-[0.86rem] font-semibold text-[#0B1B3F]">
-        {value || "Not available"}
-      </p>
-    </div>
-  </div>
-);
-
-const inputClass =
-  "w-full rounded-xl border border-[#EEF2FA] bg-white px-3.5 py-2.5 text-sm text-[#0B1B3F] outline-none transition focus:border-[#0B5FFF] focus:ring-2 focus:ring-[#0B5FFF]/10";
-
-const labelClass = "mb-1 block text-left text-sm font-medium text-[#5B6B8C]";
-
-const ProfileSkeleton = () => (
-  <div className="max-w-[760px] overflow-hidden rounded-2xl border border-[#EEF2FA]">
-    <div className="flex items-center gap-4 p-6 sm:p-8">
-      <div className="h-[76px] w-[76px] animate-pulse rounded-full bg-slate-200" />
-      <div className="flex-1">
-        <div className="h-6 w-1/2 animate-pulse rounded bg-slate-200" />
-        <div className="mt-2 h-5 w-1/3 animate-pulse rounded bg-slate-200" />
-      </div>
-    </div>
-    <div className="p-6 sm:p-8">
-      {[1, 2, 3].map((n) => (
-        <div key={n} className="py-2">
-          <div className="h-[54px] animate-pulse rounded-xl bg-slate-200" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const Toast = ({ open, message, severity, onClose }) => {
-  useEffect(() => {
-    if (!open) return;
-    const timer = setTimeout(onClose, 3500);
-    return () => clearTimeout(timer);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  const tone = severity === "error" ? "bg-red-600" : "bg-[#0B5FFF]";
-
-  return (
-    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-      <div
-        className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ${tone}`}
-      >
-        {message}
-        <button onClick={onClose} className="rounded-full p-0.5 hover:bg-white/20">
-          <X size={15} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const UserProfile = () => {
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
-
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "" });
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchProfile = async () => {
-      try {
-        const data = await getCurrentUserProfile();
-        if (!isMounted) return;
-        setProfile(data);
-      } catch (error) {
-        if (!isMounted) return;
-        setSnackbar({
-          open: true,
-          message: "Profile-a load panna mudiyala. Please try again.",
-          severity: "error",
-        });
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
     fetchProfile();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
-  const firstName = profile.firstName || "";
-  const lastName = profile.lastName || "";
-  const fullName = `${firstName} ${lastName}`.trim() || "User";
-  const email = profile.email || "";
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
 
-  const initials =
-    (firstName.charAt(0) || "").toUpperCase() + (lastName.charAt(0) || "").toUpperCase();
+      const data = await getCurrentUserProfile();
+      setProfile(data);
+    } catch (error) {
+      setMessage("Profile load panna mudiyala");
+      setIsError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleStartEdit = () => {
-    setFormData({ firstName, lastName, email });
+  const handleEdit = () => {
+    setFirstName(profile.firstName || "");
+    setLastName(profile.lastName || "");
+    setEmail(profile.email || "");
     setIsEditing(true);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancel = () => {
     setIsEditing(false);
   };
 
-  const handleFieldChange = (field) => (event) => {
-    setFormData((prev) => ({ ...prev, [field]: event.target.value }));
-  };
-
   const handleSave = async () => {
-    setSaving(true);
+    const data = {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+    };
+
     try {
-      const updated = await updateCurrentUser(formData);
-      setProfile(updated);
+      setSaving(true);
+
+      const updatedProfile = await updateCurrentUser(data);
+
+      setProfile(updatedProfile);
       setIsEditing(false);
-      setSnackbar({ open: true, message: "Profile updated successfully!", severity: "success" });
+      setMessage("Profile updated successfully!");
+      setIsError(false);
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error?.message || "Update panna mudiyala. Please try again.",
-        severity: "error",
-      });
+      setMessage(error?.message || "Profile update panna mudiyala");
+      setIsError(true);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
+  const fullName =
+    `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "User";
+
+  const initials =
+    (profile.firstName?.charAt(0) || "").toUpperCase() +
+    (profile.lastName?.charAt(0) || "").toUpperCase();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[250px] w-full max-w-[760px] items-center justify-center rounded-2xl border border-[#EEF2FA] bg-white">
+        <Loader2 className="animate-spin text-[#0B5FFF]" size={30} />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {loading ? (
-        <ProfileSkeleton />
-      ) : (
-        <div className="max-w-[760px] overflow-hidden rounded-2xl border border-[#EEF2FA]">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#EEF2FA] bg-[#FBFCFF] p-6 sm:p-8">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center rounded-full bg-[#EAF2FF] text-[1.1rem] font-bold text-[#0B5FFF]">
-                {initials || "U"}
-              </div>
+    <div className="w-full max-w-[760px] text-left">
+      {message && (
+        <div
+          className={`mb-4 flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm text-white ${
+            isError ? "bg-red-500" : "bg-[#0B5FFF]"
+          }`}
+        >
+          <span>{message}</span>
 
-              <div className="min-w-0 text-left">
-                <p className="truncate text-[1.05rem] font-bold text-[#0B1B3F] sm:text-[1.15rem]">
-                  {fullName}
-                </p>
-              </div>
-            </div>
-
-            {!isEditing ? (
-              <button
-                onClick={handleStartEdit}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#D8E6FF] px-4 py-2 text-sm font-semibold text-[#0B5FFF] transition hover:border-[#0B5FFF] hover:bg-[#EAF2FF]"
-              >
-                <Edit size={16} /> Edit Profile
-              </button>
-            ) : (
-              <button
-                onClick={handleCancelEdit}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-[#7C8AA6] transition hover:bg-slate-50 disabled:opacity-60"
-              >
-                <X size={16} /> Close
-              </button>
-            )}
-          </div>
-
-          <div className="p-6 sm:p-8">
-            <p className="mb-1 text-left text-[0.95rem] font-bold text-[#0B1B3F]">
-              Profile Details
-            </p>
-
-            {!isEditing ? (
-              <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
-                <ProfileDetail icon={<User size={18} />} label="Full Name" value={fullName} />
-                <ProfileDetail icon={<Mail size={18} />} label="Email Address" value={email} />
-              </div>
-            ) : (
-              <div className="mt-4 flex flex-col gap-4">
-                <div>
-                  <label className={labelClass}>First Name</label>
-                  <input
-                    value={formData.firstName}
-                    onChange={handleFieldChange("firstName")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Last Name</label>
-                  <input
-                    value={formData.lastName}
-                    onChange={handleFieldChange("lastName")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Email Address</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={handleFieldChange("email")}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-1">
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#0B5FFF] px-5 py-2 text-sm font-bold text-white shadow-lg shadow-[#0B5FFF]/25 transition hover:bg-[#0642C4] disabled:opacity-60"
-                  >
-                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                    className="rounded-xl border border-[#EEF2FA] px-5 py-2 text-sm font-bold text-[#7C8AA6] transition hover:bg-slate-50 disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <button onClick={() => setMessage("")} className="flex-shrink-0">
+            <X size={16} />
+          </button>
         </div>
       )}
 
-      <Toast
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-      />
+      <div className="overflow-hidden rounded-2xl border border-[#EEF2FA] bg-white">
+        <div className="flex flex-col items-start gap-5 border-b border-[#EEF2FA] bg-[#FBFCFF] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+          <div className="flex w-full min-w-0 items-center gap-3">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF2FF] text-lg font-bold text-[#0B5FFF] sm:h-[58px] sm:w-[58px]">
+              {initials || "U"}
+            </div>
+
+            <div className="min-w-0 text-left">
+              <h2 className="truncate text-lg font-bold text-[#0B1B3F]">
+                {fullName}
+              </h2>
+
+              <p className="mt-0.5 text-sm text-[#7C8AA6]">Personal Profile</p>
+            </div>
+          </div>
+
+          {!isEditing ? (
+            <button
+              onClick={handleEdit}
+              className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#D8E6FF] px-4 py-2.5 text-sm font-semibold text-[#0B5FFF] transition hover:bg-[#EAF2FF] sm:w-auto"
+            >
+              <Edit size={16} className="shrink-0" />
+              Edit Profile
+            </button>
+          ) : (
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-[#7C8AA6] transition hover:bg-gray-100 disabled:opacity-50 sm:w-auto"
+            >
+              <X size={16} />
+              Close
+            </button>
+          )}
+        </div>
+
+        <div className="p-5 text-left sm:p-7">
+          <h3 className="mb-5 text-left text-base font-bold text-[#0B1B3F]">
+            Profile Details
+          </h3>
+
+          {!isEditing ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="flex min-w-0 items-center gap-3 text-left">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#EAF2FF] text-[#0B5FFF]">
+                  <User size={18} />
+                </div>
+
+                <div className="min-w-0 text-left">
+                  <p className="text-left text-xs text-[#7C8AA6]">Full Name</p>
+
+                  <p className="truncate text-left font-semibold text-[#0B1B3F]">
+                    {fullName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 items-center gap-3 text-left">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#EAF2FF] text-[#0B5FFF]">
+                  <Mail size={18} />
+                </div>
+
+                <div className="min-w-0 text-left">
+                  <p className="text-left text-xs text-[#7C8AA6]">
+                    Email Address
+                  </p>
+
+                  <p className="break-all text-left font-semibold text-[#0B1B3F]">
+                    {profile.email || "Not available"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex w-full flex-col gap-4 text-left">
+              <div className="w-full text-left">
+                <label className="mb-1.5 block text-left text-sm font-medium text-[#5B6B8C]">
+                  First Name
+                </label>
+
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full rounded-xl border border-[#EEF2FA] px-4 py-3 text-left text-sm outline-none transition focus:border-[#0B5FFF] focus:ring-2 focus:ring-[#0B5FFF]/10"
+                />
+              </div>
+
+              <div className="w-full text-left">
+                <label className="mb-1.5 block text-left text-sm font-medium text-[#5B6B8C]">
+                  Last Name
+                </label>
+
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full rounded-xl border border-[#EEF2FA] px-4 py-3 text-left text-sm outline-none transition focus:border-[#0B5FFF] focus:ring-2 focus:ring-[#0B5FFF]/10"
+                />
+              </div>
+
+              <div className="w-full text-left">
+                <label className="mb-1.5 block text-left text-sm font-medium text-[#5B6B8C]">
+                  Email Address
+                </label>
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-[#EEF2FA] px-4 py-3 text-left text-sm outline-none transition focus:border-[#0B5FFF] focus:ring-2 focus:ring-[#0B5FFF]/10"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0B5FFF] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0642C4] disabled:opacity-50 sm:w-auto"
+                >
+                  {saving ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Save size={16} />
+                  )}
+
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+
+                <button
+                  onClick={handleCancel}
+                  disabled={saving}
+                  className="w-full rounded-xl border border-[#EEF2FA] px-5 py-2.5 text-sm font-semibold text-[#7C8AA6] transition hover:bg-gray-50 disabled:opacity-50 sm:w-auto"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
