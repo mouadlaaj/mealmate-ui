@@ -1,24 +1,13 @@
-import React from "react";
 import Sidebar from "./sidebar";
 
 const Layout = ({ children }) => {
-  const pageStyle = {
-    display: "flex",
-    minHeight: "100vh",
-    backgroundColor: "#F6F8FC",
-  };
-
-  const contentStyle = {
-    flex: 1,
-    minWidth: 0,
-    padding: "24px",
-    overflowY: "auto",
-  };
-
   return (
-    <div style={pageStyle}>
+    <div className="flex min-h-screen bg-[#F6F8FC]">
       <Sidebar />
-      <main style={contentStyle}>{children}</main>
+
+      <main className="min-w-0 flex-1 overflow-y-auto p-6">
+        {children}
+      </main>
     </div>
   );
 };

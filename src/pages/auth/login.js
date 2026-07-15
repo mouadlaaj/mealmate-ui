@@ -40,29 +40,85 @@ const features = [
 ];
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
+
     try {
-      await loginUser(form);
+      await loginUser({
+        email: form.email.trim(),
+        password: form.password,
+      });
+
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      toast.error(err?.message || "Login failed");
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Login failed"
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  const getInputClass = (fieldName) =>
+    `w-full rounded-lg border bg-white py-2 text-sm text-left outline-none transition-colors sm:py-2.5 ${
+      errors[fieldName]
+        ? "border-red-500 focus:border-red-500"
+        : "border-[#C7D7EE] hover:border-[#0B5FFF] focus:border-[#0B5FFF]"
+    }`;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#F4F8FF] md:h-screen md:flex-row md:overflow-hidden">
@@ -89,7 +145,8 @@ export default function Login() {
             </h1>
 
             <p className="mb-2 max-w-[360px] text-center text-[0.7rem] font-normal leading-relaxed opacity-90 lg:text-[0.8rem] xl:text-[0.9rem]">
-              Plan your meals, track your nutrition, and stay healthy with Meal Mate.
+              Plan your meals, track your nutrition, and stay healthy with Meal
+              Mate.
             </p>
 
             <img
@@ -101,6 +158,7 @@ export default function Login() {
             <div className="mt-3 grid w-full grid-cols-4 gap-2 lg:mt-4 lg:gap-3">
               {features.map((item, idx) => {
                 const Icon = item.icon;
+
                 return (
                   <div
                     key={idx}
@@ -109,9 +167,11 @@ export default function Login() {
                     <div className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 lg:h-9 lg:w-9">
                       <Icon size={16} className="lg:size-[18px]" />
                     </div>
+
                     <span className="break-words text-[0.55rem] font-bold leading-tight lg:text-[0.62rem]">
                       {item.title}
                     </span>
+
                     <span className="mt-0.5 hidden break-words text-[0.55rem] leading-tight opacity-80 line-clamp-2 lg:block">
                       {item.desc}
                     </span>
@@ -133,17 +193,26 @@ export default function Login() {
           <div className="w-full rounded-2xl bg-transparent p-0 sm:bg-white sm:p-6 sm:shadow-[0_8px_30px_rgba(11,95,255,0.08)]">
             <div className="mb-5 flex items-center justify-center gap-2 md:hidden">
               <UtensilsCrossed className="text-[#0B5FFF]" size={24} />
-              <span className="text-lg font-bold text-[#003EBB]">Meal Mate</span>
+              <span className="text-lg font-bold text-[#003EBB]">
+                Meal Mate
+              </span>
             </div>
 
             <div className="mb-6 text-center sm:mb-7">
-              <h2 className="text-lg font-bold text-[#0A2E6B] sm:text-xl">Sign In</h2>
+              <h2 className="text-lg font-bold text-[#0A2E6B] sm:text-xl">
+                Sign In
+              </h2>
+
               <p className="mt-1 text-xs text-[#5C7299] sm:text-sm">
                 Enter your credentials to access your account
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 sm:gap-4">
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex flex-col gap-3.5 sm:gap-4"
+            >
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -155,22 +224,33 @@ export default function Login() {
                 >
                   Email Address
                 </label>
+
                 <div className="relative">
                   <Mail
                     size={16}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#0B5FFF]"
+                    className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${
+                      errors.email ? "text-red-500" : "text-[#0B5FFF]"
+                    }`}
                   />
+
                   <input
                     id="email"
                     name="email"
                     type="email"
-                    required
                     maxLength={100}
                     value={form.email}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-[#C7D7EE] bg-white py-2 pl-9 pr-3 text-sm text-left outline-none transition-colors hover:border-[#0B5FFF] focus:border-2 focus:border-[#0B5FFF] sm:py-2.5 sm:pl-10"
+                    className={`${getInputClass(
+                      "email"
+                    )} pl-9 pr-3 sm:pl-10`}
                   />
                 </div>
+
+                {errors.email && (
+                  <p className="mt-1 text-left text-[0.7rem] text-red-500">
+                    {errors.email}
+                  </p>
+                )}
               </motion.div>
 
               <motion.div
@@ -184,28 +264,44 @@ export default function Login() {
                 >
                   Password
                 </label>
+
                 <div className="relative">
                   <Lock
                     size={16}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#0B5FFF]"
+                    className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${
+                      errors.password ? "text-red-500" : "text-[#0B5FFF]"
+                    }`}
                   />
+
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    required
                     value={form.password}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-[#C7D7EE] bg-white py-2 pl-9 pr-9 text-sm text-left outline-none transition-colors hover:border-[#0B5FFF] focus:border-2 focus:border-[#0B5FFF] sm:py-2.5 sm:pl-10 sm:pr-10"
+                    className={`${getInputClass(
+                      "password"
+                    )} pl-9 pr-9 sm:pl-10 sm:pr-10`}
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-[#5C7299] hover:bg-black/5"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
                   </button>
                 </div>
+
+                {errors.password && (
+                  <p className="mt-1 text-left text-[0.7rem] text-red-500">
+                    {errors.password}
+                  </p>
+                )}
               </motion.div>
 
               <motion.div
@@ -218,8 +314,11 @@ export default function Login() {
                   disabled={loading}
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0B5FFF] py-2.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(11,95,255,0.3)] transition-colors hover:bg-[#0846C4] disabled:cursor-not-allowed disabled:opacity-70 sm:py-3 sm:text-base"
                 >
-                  {loading && <Loader2 size={16} className="animate-spin" />}
-                  Sign In
+                  {loading && (
+                    <Loader2 size={16} className="animate-spin" />
+                  )}
+
+                  {loading ? "Signing In..." : "Sign In"}
                 </button>
               </motion.div>
             </form>

@@ -8,7 +8,6 @@ import {
   Trash2,
   Pencil,
   Eye,
-  MinusCircle,
   PlusCircle,
   UtensilsCrossed,
   Search,
@@ -22,11 +21,12 @@ import {
   getAllRecipes,
   updateRecipe,
   deleteRecipe,
+  searchIngredients,
 } from "../services/api";
 
-function getErrorMessage(error) {
+const getErrorMessage = (error) => {
   return error?.message || "";
-}
+};
 
 const CATEGORY_OPTIONS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
@@ -42,10 +42,10 @@ const UNIT_OPTIONS = [
   { value: "PINCH", label: "pinch" },
 ];
 
-function getUnitLabel(value) {
+const getUnitLabel = (value) => {
   const found = UNIT_OPTIONS.find((option) => option.value === value);
   return found ? found.label : value;
-}
+};
 
 const emptyIngredient = { ingredientName: "", amount: "", unit: "" };
 
@@ -59,62 +59,70 @@ const initialFormData = {
   ingredients: [emptyIngredient],
 };
 
+const initialFormErrors = {
+  title: "",
+  servings: "",
+  category: "",
+  preparationTime: "",
+  ingredients: [],
+};
+
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-600";
 
+const errorInputClass =
+  "w-full rounded-xl border border-red-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-red-500";
+
 const labelClass = "mb-1.5 block text-left text-sm font-medium text-slate-700";
 
-function Field({ label, required, children }) {
+const Field = ({ label, required, error, children }) => {
   return (
     <div className="text-left">
       <label className={labelClass}>
         {label}
-        {required ? <span className="text-blue-600"> *</span> : null}
+        {required ? <span className="text-slate-400"> *</span> : null}
       </label>
       {children}
+      {error ? (
+        <p className="mt-1 text-xs font-medium text-red-600">{error}</p>
+      ) : null}
     </div>
   );
-}
+};
 
-function Modal({ open, onClose, maxWidth, children }) {
+const Modal = ({ open, onClose, maxWidth, children }) => {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-400/20" onClick={onClose} />
       <div
-        className={`relative w-full ${maxWidth || "max-w-lg"} max-h-[90vh] overflow-hidden rounded-2xl bg-white text-left shadow-2xl`}
+        className={`relative w-full ${maxWidth || "max-w-lg"} max-h-[90vh] overflow-hidden rounded-2xl bg-white text-left shadow-lg`}
       >
         <div className="max-h-[90vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
-}
+};
 
-function ModalHeader({ title, onClose }) {
+const ModalHeader = ({ title }) => {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-t-2xl border-b border-slate-100 bg-blue-50 px-6 py-4">
-      <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-      <button
-        onClick={onClose}
-        className="rounded-full p-1.5 text-slate-500 hover:bg-white"
-      >
-        <X size={18} />
-      </button>
+    <div className="rounded-t-2xl border-b border-slate-100 bg-blue-50 px-6 py-4">
+      <h2 className="text-sm font-normal text-slate-700">{title}</h2>
     </div>
   );
-}
+};
 
-function Chip({ icon, children }) {
+const Chip = ({ icon, children }) => {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-normal text-slate-700">
       {icon}
       {children}
     </span>
   );
-}
+};
 
-function CardMenu({ onView, onEdit, onDelete }) {
+const CardMenu = ({ onView, onEdit, onDelete }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -159,15 +167,15 @@ function CardMenu({ onView, onEdit, onDelete }) {
       )}
     </div>
   );
-}
+};
 
-function RecipeCard({ recipe, onView, onEdit, onDelete }) {
+const RecipeCard = ({ recipe, onView, onEdit, onDelete }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md">
       <div className="relative flex h-24 items-center justify-center rounded-t-xl bg-gradient-to-br from-blue-100 to-blue-200">
         <UtensilsCrossed size={28} className="text-white/90" />
 
-        <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-blue-800 shadow">
+        <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-0.5 text-sm font-normal text-slate-700 shadow">
           {recipe.category}
         </span>
 
@@ -177,9 +185,7 @@ function RecipeCard({ recipe, onView, onEdit, onDelete }) {
       </div>
 
       <div className="p-3.5 text-left">
-        <h3 className="text-sm font-bold text-slate-900">
-          {recipe.title}
-        </h3>
+        <h3 className="text-sm font-normal text-slate-700">{recipe.title}</h3>
 
         <p className="mt-1 line-clamp-2 min-h-[32px] text-xs text-slate-500">
           {recipe.description || "No description available"}
@@ -194,13 +200,13 @@ function RecipeCard({ recipe, onView, onEdit, onDelete }) {
       </div>
     </div>
   );
-}
+};
 
-function EmptyState({ onAdd }) {
+const EmptyState = ({ onAdd }) => {
   return (
     <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-blue-50/60 text-center">
       <ChefHat size={48} className="mb-3 text-blue-600" />
-      <p className="text-lg font-bold text-slate-900">No recipes yet</p>
+      <p className="text-sm font-normal text-slate-700">No recipes yet</p>
       <p className="mt-1 text-sm text-slate-500">
         Add your first healthy recipe to get started
       </p>
@@ -212,12 +218,160 @@ function EmptyState({ onAdd }) {
       </button>
     </div>
   );
-}
+};
 
-function Recipes() {
+const IngredientRow = ({
+  index,
+  ingredient,
+  error,
+  onChange,
+  onRemove,
+  disableRemove,
+}) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  const handleNameChange = async (event) => {
+    onChange(index, event);
+
+    const value = event.target.value;
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      setSearching(true);
+      const result = await searchIngredients(value);
+      setSuggestions(result || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      setSuggestions([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestionName) => {
+    const fakeEvent = {
+      target: { name: "ingredientName", value: suggestionName },
+    };
+    onChange(index, fakeEvent);
+    setShowSuggestions(false);
+  };
+
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          disabled={disableRemove}
+          onClick={() => onRemove(index)}
+          className="rounded-full p-1.5 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-[2fr_1fr_1fr]">
+        <div className="relative">
+          <input
+            placeholder="Ingredient Name"
+            name="ingredientName"
+            value={ingredient.ingredientName}
+            onChange={handleNameChange}
+            onFocus={() => {
+              if (suggestions.length > 0) setShowSuggestions(true);
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowSuggestions(false), 150);
+            }}
+            className={`${
+              error?.ingredientName ? errorInputClass : inputClass
+            } bg-white`}
+          />
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+              {suggestions.map((suggestion, suggestionIndex) => (
+                <button
+                  key={suggestionIndex}
+                  type="button"
+                  onClick={() =>
+                    handleSuggestionClick(
+                      suggestion.name || suggestion.ingredientName
+                    )
+                  }
+                  className="flex w-full items-center px-3.5 py-2 text-left text-sm text-slate-700 hover:bg-blue-50"
+                >
+                  {suggestion.name || suggestion.ingredientName}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {searching && (
+            <p className="mt-1 text-xs text-slate-400">Searching...</p>
+          )}
+
+          {error?.ingredientName && (
+            <p className="mt-1 text-xs font-medium text-red-600">
+              {error.ingredientName}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <input
+            type="number"
+            placeholder="Amount"
+            name="amount"
+            value={ingredient.amount}
+            onChange={(event) => onChange(index, event)}
+            className={`${error?.amount ? errorInputClass : inputClass} bg-white`}
+          />
+          {error?.amount && (
+            <p className="mt-1 text-xs font-medium text-red-600">
+              {error.amount}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <select
+            name="unit"
+            value={ingredient.unit}
+            onChange={(event) => onChange(index, event)}
+            className={`${error?.unit ? errorInputClass : inputClass} bg-white`}
+          >
+            <option value="" disabled>
+              Unit
+            </option>
+            {UNIT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {error?.unit && (
+            <p className="mt-1 text-xs font-medium text-red-600">
+              {error.unit}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
+  const [formErrors, setFormErrors] = useState(initialFormErrors);
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -227,7 +381,6 @@ function Recipes() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const [editId, setEditId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -236,7 +389,7 @@ function Recipes() {
     fetchRecipes();
   }, []);
 
-  async function fetchRecipes() {
+  const fetchRecipes = async () => {
     try {
       setLoading(true);
       const response = await getAllRecipes();
@@ -247,14 +400,15 @@ function Recipes() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function handleChange(event) {
+  const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
-  }
+    setFormErrors({ ...formErrors, [name]: "" });
+  };
 
-  function handleIngredientChange(index, event) {
+  const handleIngredientChange = (index, event) => {
     const { name, value } = event.target;
     const updatedIngredients = [...formData.ingredients];
     updatedIngredients[index] = {
@@ -262,41 +416,54 @@ function Recipes() {
       [name]: value,
     };
     setFormData({ ...formData, ingredients: updatedIngredients });
-  }
 
-  function handleAddIngredient() {
+    const updatedIngredientErrors = [...formErrors.ingredients];
+    if (updatedIngredientErrors[index]) {
+      updatedIngredientErrors[index] = {
+        ...updatedIngredientErrors[index],
+        [name]: "",
+      };
+    }
+    setFormErrors({ ...formErrors, ingredients: updatedIngredientErrors });
+  };
+
+  const handleAddIngredient = () => {
     setFormData({
       ...formData,
       ingredients: [...formData.ingredients, { ...emptyIngredient }],
     });
-  }
+  };
 
-  function handleRemoveIngredient(index) {
+  const handleRemoveIngredient = (index) => {
     if (formData.ingredients.length === 1) return;
     const updatedIngredients = formData.ingredients.filter(
       (item, i) => i !== index
     );
+    const updatedIngredientErrors = formErrors.ingredients.filter(
+      (item, i) => i !== index
+    );
     setFormData({ ...formData, ingredients: updatedIngredients });
-  }
+    setFormErrors({ ...formErrors, ingredients: updatedIngredientErrors });
+  };
 
-  function handleAddOpen() {
+  const handleAddOpen = () => {
     setEditId(null);
-    setErrorMessage("");
+    setFormErrors(initialFormErrors);
     setFormData(initialFormData);
     setFormOpen(true);
-  }
+  };
 
-  function handleFormClose() {
+  const handleFormClose = () => {
     setFormOpen(false);
     setEditId(null);
-    setErrorMessage("");
+    setFormErrors(initialFormErrors);
     setFormData(initialFormData);
-  }
+  };
 
-  async function handleEditOpen(recipeId) {
+  const handleEditOpen = async (recipeId) => {
     try {
       setActionLoading(true);
-      setErrorMessage("");
+      setFormErrors(initialFormErrors);
 
       const response = await getRecipeById(recipeId);
 
@@ -328,9 +495,9 @@ function Recipes() {
     } finally {
       setActionLoading(false);
     }
-  }
+  };
 
-  async function handleView(recipeId) {
+  const handleView = async (recipeId) => {
     try {
       setActionLoading(true);
       const response = await getRecipeById(recipeId);
@@ -342,43 +509,63 @@ function Recipes() {
     } finally {
       setActionLoading(false);
     }
-  }
+  };
 
-  async function handleSubmit() {
+  const validateForm = () => {
+    const errors = { ...initialFormErrors };
+    let isValid = true;
+
+    if (!formData.title.trim()) {
+      errors.title = "Recipe title is required";
+      isValid = false;
+    }
+
+    if (!formData.servings) {
+      errors.servings = "Servings is required";
+      isValid = false;
+    }
+
+    if (!formData.category) {
+      errors.category = "Category is required";
+      isValid = false;
+    }
+
+    if (!formData.preparationTime) {
+      errors.preparationTime = "Preparation time is required";
+      isValid = false;
+    }
+
+    const ingredientErrors = formData.ingredients.map((ingredient) => {
+      const rowError = { ingredientName: "", amount: "", unit: "" };
+
+      if (!ingredient.ingredientName.trim()) {
+        rowError.ingredientName = "Name is required";
+        isValid = false;
+      }
+
+      if (!ingredient.amount) {
+        rowError.amount = "Amount is required";
+        isValid = false;
+      }
+
+      if (!ingredient.unit) {
+        rowError.unit = "Unit is required";
+        isValid = false;
+      }
+
+      return rowError;
+    });
+
+    errors.ingredients = ingredientErrors;
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
     try {
-      setErrorMessage("");
-
-      if (!formData.title.trim()) {
-        setErrorMessage("Recipe title is required");
-        return;
-      }
-      if (!formData.servings) {
-        setErrorMessage("Servings is required");
-        return;
-      }
-      if (!formData.category) {
-        setErrorMessage("Category is required");
-        return;
-      }
-      if (!formData.preparationTime) {
-        setErrorMessage("Preparation time is required");
-        return;
-      }
-
-      let hasInvalidIngredient = false;
-      for (const ingredient of formData.ingredients) {
-        if (
-          !ingredient.ingredientName.trim() ||
-          !ingredient.amount ||
-          !ingredient.unit
-        ) {
-          hasInvalidIngredient = true;
-        }
-      }
-      if (hasInvalidIngredient) {
-        setErrorMessage("Please complete all ingredient fields");
-        return;
-      }
+      const isValid = validateForm();
+      if (!isValid) return;
 
       setActionLoading(true);
 
@@ -409,24 +596,18 @@ function Recipes() {
     } catch (error) {
       console.error("Failed to save recipe:", error);
       const message = getErrorMessage(error) || "Failed to save recipe";
-
-      if (error?.errors?.length > 0) {
-        setErrorMessage(error.errors.join(", "));
-      } else {
-        setErrorMessage(message);
-      }
       toast.error(message);
     } finally {
       setActionLoading(false);
     }
-  }
+  };
 
-  function handleDeleteOpen(recipe) {
+  const handleDeleteOpen = (recipe) => {
     setSelectedRecipe(recipe);
     setDeleteOpen(true);
-  }
+  };
 
-  async function handleDelete() {
+  const handleDelete = async () => {
     try {
       setActionLoading(true);
       await deleteRecipe(selectedRecipe.id);
@@ -440,9 +621,9 @@ function Recipes() {
     } finally {
       setActionLoading(false);
     }
-  }
+  };
 
-  function getFilteredRecipes() {
+  const getFilteredRecipes = () => {
     return recipes.filter((recipe) => {
       const title = recipe.title ? recipe.title.toLowerCase() : "";
       const matchesSearch = title.includes(searchTerm.trim().toLowerCase());
@@ -450,18 +631,18 @@ function Recipes() {
         categoryFilter === "All" || recipe.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }
+  };
 
   const filteredRecipes = getFilteredRecipes();
 
   return (
-    <div className="min-h-full bg-white p-4 md:p-6">
+    <div className="min-h-full bg-white p-4 pt-16 sm:pt-4 md:p-6">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
             <ChefHat size={22} className="text-blue-600" />
           </div>
-          <div className="text-left">
+          <div className="min-w-0 text-left">
             <h1 className="text-2xl font-extrabold text-slate-900">
               My Recipes
             </h1>
@@ -478,7 +659,8 @@ function Recipes() {
           <Plus size={18} /> Add Recipe
         </button>
       </div>
-      <div className="mb-6 flex flex-nowrap items-center gap-2 sm:gap-3">
+
+      <div className="mb-6 flex flex-row flex-nowrap items-center gap-2 sm:gap-3">
         <div className="relative min-w-0 flex-1">
           <Search
             size={18}
@@ -496,7 +678,7 @@ function Recipes() {
         <select
           value={categoryFilter}
           onChange={(event) => setCategoryFilter(event.target.value)}
-          className={`${inputClass} w-28 flex-shrink-0 sm:w-44`}
+          className={`${inputClass} w-32 flex-shrink-0 px-2 text-xs sm:w-44 sm:px-3.5 sm:text-sm`}
         >
           <option value="All">All Categories</option>
           {CATEGORY_OPTIONS.map((category) => (
@@ -506,6 +688,7 @@ function Recipes() {
           ))}
         </select>
       </div>
+
       {loading ? (
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
@@ -515,7 +698,7 @@ function Recipes() {
       ) : filteredRecipes.length === 0 ? (
         <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-blue-50/40 text-center">
           <Search size={36} className="mb-3 text-blue-600" />
-          <p className="font-bold text-slate-900">
+          <p className="text-sm font-normal text-slate-700">
             No recipes match your search
           </p>
           <p className="mt-1 text-[13.5px] text-slate-500">
@@ -523,7 +706,7 @@ function Recipes() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
           {filteredRecipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
@@ -535,26 +718,18 @@ function Recipes() {
           ))}
         </div>
       )}
+
       <Modal open={formOpen} onClose={handleFormClose} maxWidth="max-w-3xl">
-        <ModalHeader
-          title={editId ? "Edit Recipe" : "Add New Recipe"}
-          onClose={handleFormClose}
-        />
+        <ModalHeader title={editId ? "Edit Recipe" : "Add New Recipe"} />
 
         <div className="px-6 py-5 text-left">
-          {errorMessage && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
           <div className="space-y-5">
-            <Field label="Recipe Title" required>
+            <Field label="Recipe Title" required error={formErrors.title}>
               <input
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className={inputClass}
+                className={formErrors.title ? errorInputClass : inputClass}
               />
             </Field>
 
@@ -569,12 +744,14 @@ function Recipes() {
             </Field>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Field label="Category" required>
+              <Field label="Category" required error={formErrors.category}>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={
+                    formErrors.category ? errorInputClass : inputClass
+                  }
                 >
                   <option value="" disabled>
                     Select
@@ -587,23 +764,31 @@ function Recipes() {
                 </select>
               </Field>
 
-              <Field label="Servings" required>
+              <Field label="Servings" required error={formErrors.servings}>
                 <input
                   type="number"
                   name="servings"
                   value={formData.servings}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={
+                    formErrors.servings ? errorInputClass : inputClass
+                  }
                 />
               </Field>
 
-              <Field label="Preparation Time (min)" required>
+              <Field
+                label="Preparation Time (min)"
+                required
+                error={formErrors.preparationTime}
+              >
                 <input
                   type="number"
                   name="preparationTime"
                   value={formData.preparationTime}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={
+                    formErrors.preparationTime ? errorInputClass : inputClass
+                  }
                 />
               </Field>
             </div>
@@ -613,7 +798,7 @@ function Recipes() {
             <div className="text-left">
               <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <p className="text-[15px] font-bold text-slate-900">
+                  <p className="text-sm font-normal text-slate-700">
                     Ingredients
                   </p>
                   <p className="text-xs text-slate-500">
@@ -631,58 +816,15 @@ function Recipes() {
 
               <div className="space-y-3">
                 {formData.ingredients.map((ingredient, index) => (
-                  <div
+                  <IngredientRow
                     key={index}
-                    className="grid grid-cols-1 items-center gap-2.5 rounded-xl border border-blue-100 bg-blue-50/60 p-3 sm:grid-cols-[2fr_1fr_1fr_auto]"
-                  >
-                    <input
-                      placeholder="Ingredient Name"
-                      name="ingredientName"
-                      value={ingredient.ingredientName}
-                      onChange={(event) =>
-                        handleIngredientChange(index, event)
-                      }
-                      className={`${inputClass} bg-white`}
-                    />
-
-                    <input
-                      type="number"
-                      placeholder="Amount"
-                      name="amount"
-                      value={ingredient.amount}
-                      onChange={(event) =>
-                        handleIngredientChange(index, event)
-                      }
-                      className={`${inputClass} bg-white`}
-                    />
-
-                    <select
-                      name="unit"
-                      value={ingredient.unit}
-                      onChange={(event) =>
-                        handleIngredientChange(index, event)
-                      }
-                      className={`${inputClass} bg-white`}
-                    >
-                      <option value="" disabled>
-                        Unit
-                      </option>
-                      {UNIT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      disabled={formData.ingredients.length === 1}
-                      onClick={() => handleRemoveIngredient(index)}
-                      className="justify-self-center rounded-full p-1.5 text-red-500 disabled:cursor-not-allowed disabled:opacity-30"
-                    >
-                      <MinusCircle size={20} />
-                    </button>
-                  </div>
+                    index={index}
+                    ingredient={ingredient}
+                    error={formErrors.ingredients[index]}
+                    onChange={handleIngredientChange}
+                    onRemove={handleRemoveIngredient}
+                    disableRemove={formData.ingredients.length === 1}
+                  />
                 ))}
               </div>
             </div>
@@ -722,15 +864,20 @@ function Recipes() {
           </button>
         </div>
       </Modal>
-      <Modal open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="max-w-lg">
+
+      <Modal
+        open={viewOpen}
+        onClose={() => setViewOpen(false)}
+        maxWidth="max-w-lg"
+      >
         {selectedRecipe && (
           <>
-            <div className="flex items-start justify-between gap-3 rounded-t-2xl border-b border-slate-100 bg-blue-50 px-4 py-4 sm:px-6">
+            <div className="flex items-start justify-between gap-3 rounded-t-2xl border-b border-slate-100 bg-blue-50 px-4 py-3.5 sm:px-6">
               <div className="min-w-0 text-left">
-                <h2 className="truncate text-lg font-extrabold text-slate-900 sm:text-xl">
+                <h2 className="truncate text-sm font-normal text-slate-700">
                   {selectedRecipe.title}
                 </h2>
-                <span className="mt-2 inline-block rounded-full border border-blue-100 bg-white px-2.5 py-1 text-xs font-bold text-blue-800">
+                <span className="mt-1.5 inline-block rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-normal text-slate-700">
                   {selectedRecipe.category}
                 </span>
               </div>
@@ -742,12 +889,14 @@ function Recipes() {
               </button>
             </div>
 
-            <div className="px-4 py-5 text-left sm:px-6">
-              <p className="text-sm leading-relaxed text-slate-500">
-                {selectedRecipe.description}
-              </p>
+            <div className="px-4 py-4 text-left sm:px-6">
+              {selectedRecipe.description && (
+                <p className="text-sm font-normal leading-relaxed text-slate-700">
+                  {selectedRecipe.description}
+                </p>
+              )}
 
-              <div className="my-5 flex flex-wrap gap-2">
+              <div className="my-3 flex flex-wrap gap-2">
                 <Chip icon={<Clock size={13} />}>
                   {selectedRecipe.preparationTime} min
                 </Chip>
@@ -759,22 +908,22 @@ function Recipes() {
               {selectedRecipe.ingredients &&
                 selectedRecipe.ingredients.length > 0 && (
                   <>
-                    <p className="mb-2.5 text-[15px] font-bold text-slate-900">
+                    <p className="mb-2 text-sm font-normal text-slate-700">
                       Ingredients
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-2">
                       {selectedRecipe.ingredients.map((ingredient, index) => (
                         <div
                           key={index}
-                          className="rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2.5 text-left"
+                          className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2 text-left"
                         >
-                          <p className="truncate text-sm font-bold text-slate-900">
+                          <p className="truncate text-sm font-normal text-slate-700">
                             {ingredient.ingredientName ||
                               ingredient.name ||
                               `Ingredient ${index + 1}`}
                           </p>
-                          <p className="text-[13px] text-slate-500">
+                          <p className="flex-shrink-0 pl-2 text-sm font-normal text-slate-700">
                             {ingredient.amount ?? ingredient.quantity}{" "}
                             {getUnitLabel(ingredient.unit)}
                           </p>
@@ -782,30 +931,35 @@ function Recipes() {
                       ))}
                     </div>
 
-                    <hr className="my-5 border-slate-100" />
+                    <hr className="my-4 border-slate-100" />
                   </>
                 )}
 
-              <p className="mb-1.5 text-[15px] font-bold text-slate-900">
+              <p className="mb-1 text-sm font-normal text-slate-700">
                 Preparation Steps
               </p>
-              <p className="whitespace-pre-line pb-2 text-left text-sm leading-loose text-slate-600">
+              <p className="whitespace-pre-line pb-1 text-left text-sm font-normal leading-relaxed text-slate-700">
                 {selectedRecipe.preparationSteps}
               </p>
             </div>
           </>
         )}
       </Modal>
-      <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="max-w-sm">
+
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        maxWidth="max-w-sm"
+      >
         <div className="px-6 py-5 text-left">
-          <h2 className="text-lg font-extrabold text-slate-900">
+          <h2 className="text-sm font-normal text-slate-700">
             Delete Recipe?
           </h2>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm font-normal text-slate-700">
             Are you sure you want to delete{" "}
-            <strong className="text-slate-900">
+            <span className="font-normal text-slate-700">
               {selectedRecipe ? selectedRecipe.title : ""}
-            </strong>
+            </span>
             ? This action cannot be undone.
           </p>
         </div>
@@ -829,6 +983,6 @@ function Recipes() {
       </Modal>
     </div>
   );
-}
+};
 
 export default Recipes;

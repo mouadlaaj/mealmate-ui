@@ -55,7 +55,11 @@ const Sidebar = () => {
       path: "/mealPlans",
       icon: <CalendarDays size={21} />,
     },
-  
+    {
+      name: "Shopping List",
+      path: "/shoppingList",
+      icon: <ShoppingCart size={21} />,
+    },
   ];
 
   const handleNavigate = (path) => {

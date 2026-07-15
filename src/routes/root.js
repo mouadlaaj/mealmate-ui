@@ -7,6 +7,7 @@ import UserProfile from '../pages/userProfile';
 import Layout from '../layout/layout'
 import Recipes from '../pages/recipes';
 import MealPlans from '../pages/mealPlans';
+import ShoppingList from '../pages/shoppingList';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -40,6 +41,7 @@ function Root() {
       <Route path="/profile" element={<UserProfile />} />
       <Route path="/recipes" element={<Recipes />} />
       <Route path="/mealPlans" element={<MealPlans />} />
+      <Route path="/shoppingList" element={<ShoppingList />} />
        </Route>
     </Routes>
   );

@@ -30,6 +30,14 @@ const emptyMeal = {
   servings: 1,
 };
 
+const inputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-600";
+
+const errorInputClass =
+  "w-full rounded-xl border border-red-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-red-500";
+
+const labelClass = "mb-1.5 block text-left text-sm font-medium text-slate-700";
+
 const MealPlans = () => {
   const [mealPlans, setMealPlans] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -54,6 +62,8 @@ const MealPlans = () => {
   const [entryErrors, setEntryErrors] = useState([]);
 
   const menuRef = useRef(null);
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     fetchMealPlans();
@@ -184,8 +194,12 @@ const MealPlans = () => {
       return;
     }
 
-    const updatedEntries = entries.filter((_, entryIndex) => entryIndex !== index);
-    const updatedErrors = entryErrors.filter((_, errorIndex) => errorIndex !== index);
+    const updatedEntries = entries.filter(
+      (_, entryIndex) => entryIndex !== index,
+    );
+    const updatedErrors = entryErrors.filter(
+      (_, errorIndex) => errorIndex !== index,
+    );
 
     setEntries(updatedEntries);
     setEntryErrors(updatedErrors);
@@ -249,7 +263,7 @@ const MealPlans = () => {
     setEntryErrors(newEntryErrors);
 
     const hasErrors = newEntryErrors.some(
-      (mealError) => Object.keys(mealError).length > 0
+      (mealError) => Object.keys(mealError).length > 0,
     );
 
     return !hasErrors;
@@ -375,22 +389,18 @@ const MealPlans = () => {
     }
   };
 
-  const inputClass =
-    "h-[46px] w-full rounded-xl border border-[#DDE5F1] bg-white px-4 text-sm text-[#0B1B3F] outline-none transition focus:border-[#0B5FFF] focus:ring-2 focus:ring-[#0B5FFF]/10";
-
-  const errorInputClass =
-    "h-[46px] w-full rounded-xl border border-red-400 bg-white px-4 text-sm text-[#0B1B3F] outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100";
-
   return (
     <div className="min-h-full bg-white p-4 md:p-6">
       <div className="w-full">
         <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
               <ClipboardList size={22} className="text-blue-600" />
             </div>
-            <div className="text-left">
-              <h1 className="text-2xl font-extrabold text-slate-900">Meal Plans</h1>
+            <div className="min-w-0 text-left">
+              <h1 className="text-2xl font-extrabold text-slate-900">
+                Meal Plans
+              </h1>
               <p className="mt-0.5 text-sm text-slate-500">
                 Create and manage your healthy meal plans
               </p>
@@ -407,16 +417,16 @@ const MealPlans = () => {
         </div>
 
         {selectedPlan && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-900/45 p-3 sm:p-4">
-            <div className="flex max-h-[90vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[#EEF2FA] px-5 py-4">
-                <div>
-                  <h2 className="text-lg font-bold text-[#0B1B3F]">Meal Plan</h2>
-                </div>
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-400/20 p-3 sm:p-4">
+            <div className="flex max-h-[90vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-lg">
+              <div className="flex items-center justify-between border-b border-slate-100 bg-blue-50 px-5 py-4">
+                <h2 className="text-sm font-normal text-slate-700">
+                  Meal Plan
+                </h2>
 
                 <button
                   onClick={() => setSelectedPlan(null)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7C8AA6] transition hover:bg-[#F6F8FC]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-white"
                 >
                   <X size={18} />
                 </button>
@@ -424,89 +434,96 @@ const MealPlans = () => {
 
               <div className="flex-1 overflow-y-auto p-5 text-left">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div className="col-span-2 min-w-0 sm:col-span-1">
-                    <p className="text-left text-xs font-medium text-[#7C8AA6]">Plan Name</p>
-                    <p className="mt-1 truncate text-sm font-semibold text-[#0B1B3F]">
+                  <div className="col-span-2 min-w-0 text-left sm:col-span-1">
+                    <p className="text-xs text-slate-500">Plan Name</p>
+                    <p className="mt-1 truncate text-sm font-normal text-slate-700">
                       {selectedPlan.name}
                     </p>
                   </div>
 
-                  <div className="min-w-0">
-                    <p className="text-left text-xs font-medium text-[#7C8AA6]">Start Date</p>
-                    <p className="mt-1 truncate text-left text-sm font-semibold text-[#0B1B3F]">
+                  <div className="min-w-0 text-left">
+                    <p className="text-xs text-slate-500">Start Date</p>
+                    <p className="mt-1 truncate text-sm font-normal text-slate-700">
                       {selectedPlan.startDate}
                     </p>
                   </div>
 
-                  <div className="min-w-0">
-                    <p className="text-left text-xs font-medium text-[#7C8AA6]">End Date</p>
-                    <p className="mt-1 truncate text-left text-sm font-semibold text-[#0B1B3F]">
+                  <div className="min-w-0 text-left">
+                    <p className="text-xs text-slate-500">End Date</p>
+                    <p className="mt-1 truncate text-sm font-normal text-slate-700">
                       {selectedPlan.endDate}
                     </p>
                   </div>
                 </div>
 
-                <div className="my-6 border-t border-[#EEF2FA]" />
+                <hr className="my-4 border-slate-100" />
 
                 <div>
-                  <div className="mb-4 text-left">
-                    <h3 className="text-base font-bold text-[#0B1B3F]">Meals</h3>
-                    <p className="mt-1 text-left text-xs text-[#7C8AA6]">
-                      {selectedPlan.entries?.length || 0} meals added to this plan
+                  <div className="mb-3 text-left">
+                    <p className="text-sm font-normal text-slate-700">Meals</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {selectedPlan.entries?.length || 0} meals added to this
+                      plan
                     </p>
                   </div>
 
-                  {!selectedPlan.entries || selectedPlan.entries.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-[#D8E6FF] bg-[#F8FBFF] px-4 py-8 text-center">
-                      <ClipboardList size={32} className="mx-auto text-[#9BBEFF]" />
+                  {!selectedPlan.entries ||
+                  selectedPlan.entries.length === 0 ? (
+                    <div className="rounded-xl border-2 border-dashed border-slate-200 bg-blue-50/40 px-4 py-8 text-center">
+                      <ClipboardList
+                        size={32}
+                        className="mx-auto text-blue-600"
+                      />
 
-                      <p className="mt-3 text-sm font-semibold text-[#0B1B3F]">
+                      <p className="mt-3 text-sm font-normal text-slate-700">
                         No meals added
                       </p>
 
-                      <p className="mt-1 text-xs text-[#7C8AA6]">
+                      <p className="mt-1 text-xs text-slate-500">
                         This meal plan does not have any meals yet.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {selectedPlan.entries.map((entry, index) => (
                         <div
                           key={entry.id || index}
-                          className="rounded-xl border border-[#D8E6FF] bg-[#F8FBFF] p-4"
+                          className="rounded-xl border border-blue-100 bg-blue-50/60 p-3"
                         >
-                          
                           <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-left text-sm font-bold text-[#0B1B3F]">
-                                {entry.recipeName ||
+                            <div className="min-w-0 flex-1 text-left">
+                              <p className="truncate text-sm font-normal text-slate-700">
+                                {entry.recipeTitle ||
+                                  entry.recipeName ||
                                   entry.recipe?.name ||
                                   entry.recipe?.title ||
                                   "Recipe"}
                               </p>
 
                               <div className="mt-2 flex flex-wrap items-center gap-2">
-                                <span className="rounded-full border border-[#D8E6FF] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0B5FFF]">
+                                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-normal text-slate-700">
                                   {entry.mealType
                                     ? entry.mealType
                                         .toLowerCase()
-                                        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+                                        .replace(/\b\w/g, (letter) =>
+                                          letter.toUpperCase(),
+                                        )
                                     : "Meal"}
                                 </span>
 
-                                <span className="inline-flex items-center gap-1.5 text-xs text-[#7C8AA6]">
+                                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
                                   <CalendarDays size={14} />
                                   {entry.plannedDate}
                                 </span>
 
-                                <span className="inline-flex items-center gap-1.5 text-xs text-[#7C8AA6]">
+                                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
                                   <Users size={14} />
                                   {entry.servings} servings
                                 </span>
                               </div>
                             </div>
 
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF2FF] text-[#0B5FFF]">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                               <Apple size={19} />
                             </div>
                           </div>
@@ -528,22 +545,27 @@ const MealPlans = () => {
           ) : mealPlans.length === 0 ? (
             <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-blue-50/40 text-center">
               <ClipboardList size={42} className="mb-3 text-blue-600" />
-              <p className="font-bold text-slate-900">No meal plans yet</p>
+              <p className="text-sm font-normal text-slate-700">
+                No meal plans yet
+              </p>
               <p className="mt-1 text-sm text-slate-500">
                 Create your first meal plan to get started.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
               {mealPlans.map((plan) => (
                 <div
                   key={plan.id}
-                  className="relative overflow-hidden rounded-xl border border-[#DDE5F1] bg-white shadow-sm hover:shadow-md"
+                  className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md"
                 >
-                  <div className="relative flex h-24 items-center justify-center rounded-t-xl bg-[#DCE9FF]">
-                    <div className="relative text-white">
+                  <div className="relative flex h-24 items-center justify-center rounded-t-xl bg-gradient-to-br from-blue-100 to-blue-200">
+                    <div className="relative text-white/90">
                       <ClipboardList size={31} />
-                      <Apple size={19} className="absolute -bottom-1.5 -right-3" />
+                      <Apple
+                        size={19}
+                        className="absolute -bottom-1.5 -right-3"
+                      />
                     </div>
 
                     <div
@@ -554,34 +576,34 @@ const MealPlans = () => {
                         onClick={() =>
                           setOpenMenuId(openMenuId === plan.id ? null : plan.id)
                         }
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-700 shadow-md hover:bg-blue-50"
                       >
                         <MoreVertical size={18} />
                       </button>
 
                       {openMenuId === plan.id && (
-                        <div className="absolute right-0 top-10 z-50 w-[158px] rounded-xl border bg-white py-2 shadow-xl">
+                        <div className="absolute right-0 top-10 z-50 w-[158px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
                           <button
                             onClick={() => handleView(plan.id)}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F6F8FC]"
+                            className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm text-slate-700 hover:bg-blue-50"
                           >
-                            <Eye size={16} />
+                            <Eye size={15} />
                             View
                           </button>
 
                           <button
                             onClick={() => handleEdit(plan)}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F6F8FC]"
+                            className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm text-slate-700 hover:bg-blue-50"
                           >
-                            <Edit size={16} />
+                            <Edit size={15} />
                             Edit
                           </button>
 
                           <button
                             onClick={() => openDeletePopup(plan)}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50"
+                            className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                             Delete
                           </button>
                         </div>
@@ -589,12 +611,12 @@ const MealPlans = () => {
                     </div>
                   </div>
 
-                  <div className="p-3.5">
-                    <h3 className="truncate text-sm font-bold text-[#0B1B3F]">
+                  <div className="p-3.5 text-left">
+                    <h3 className="truncate text-sm font-normal text-slate-700">
                       {plan.name}
                     </h3>
 
-                    <p className="mt-1 text-xs text-[#7C8AA6]">
+                    <p className="mt-1 text-xs text-slate-500">
                       {plan.startDate} - {plan.endDate}
                     </p>
                   </div>
@@ -606,36 +628,29 @@ const MealPlans = () => {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-900/45 p-2 sm:p-4">
-          <div className="flex max-h-[94vh] w-full max-w-[900px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex shrink-0 items-start justify-between border-b border-[#EEF2FA] px-5 py-4">
-              <div>
-                <h2 className="text-lg font-bold text-[#0B1B3F]">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-400/20 p-2 sm:p-4">
+          <div className="flex max-h-[94vh] w-full max-w-[900px] flex-col overflow-hidden rounded-2xl bg-white shadow-lg">
+            <div className="flex shrink-0 items-start justify-between rounded-t-2xl border-b border-slate-100 bg-blue-50 px-5 py-4">
+              <div className="text-left">
+                <h2 className="text-sm font-normal text-slate-700">
                   {editId ? "Edit Meal Plan" : "Create Meal Plan"}
                 </h2>
 
-                <p className="mt-1 text-xs text-[#7C8AA6]">
+                <p className="mt-1 text-xs text-slate-500">
                   Add your plan details and meals
                 </p>
               </div>
-
-              <button
-                onClick={closeForm}
-                disabled={loading}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7C8AA6] hover:bg-[#F6F8FC]"
-              >
-                <X size={18} />
-              </button>
             </div>
 
-            <form onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
-              <div className="flex-1 overflow-y-auto px-5 py-5">
-               
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <div className="flex-1 overflow-y-auto px-5 py-5 text-left">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <div className="col-span-2 min-w-0 sm:col-span-1">
-                    <label className="mb-1.5 block text-sm font-medium text-[#0B1B3F]">
-                      Plan Name *
-                    </label>
+                    <label className={labelClass}>Plan Name *</label>
 
                     <input
                       type="text"
@@ -650,34 +665,37 @@ const MealPlans = () => {
                     />
 
                     {errors.name && (
-                      <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+                      <p className="mt-1 text-xs font-medium text-red-600">
+                        {errors.name}
+                      </p>
                     )}
                   </div>
 
                   <div className="min-w-0">
-                    <label className="mb-1.5 block text-sm font-medium text-[#0B1B3F]">
-                      Start Date *
-                    </label>
+                    <label className={labelClass}>Start Date *</label>
 
                     <input
                       type="date"
                       value={startDate}
+                      min={today}
                       onChange={(event) => {
                         setStartDate(event.target.value);
                         clearError("startDate");
                       }}
-                      className={errors.startDate ? errorInputClass : inputClass}
+                      className={
+                        errors.startDate ? errorInputClass : inputClass
+                      }
                     />
 
                     {errors.startDate && (
-                      <p className="mt-1 text-xs text-red-500">{errors.startDate}</p>
+                      <p className="mt-1 text-xs font-medium text-red-600">
+                        {errors.startDate}
+                      </p>
                     )}
                   </div>
 
                   <div className="min-w-0">
-                    <label className="mb-1.5 block text-sm font-medium text-[#0B1B3F]">
-                      End Date *
-                    </label>
+                    <label className={labelClass}>End Date *</label>
 
                     <input
                       type="date"
@@ -691,17 +709,19 @@ const MealPlans = () => {
                     />
 
                     {errors.endDate && (
-                      <p className="mt-1 text-xs text-red-500">{errors.endDate}</p>
+                      <p className="mt-1 text-xs font-medium text-red-600">
+                        {errors.endDate}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <div className="my-6 border-t border-[#EEF2FA]" />
+                <hr className="my-5 border-slate-100" />
 
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-base font-bold text-[#0B1B3F]">Meals</h3>
-                    <p className="mt-1 text-xs text-[#7C8AA6]">
+                    <p className="text-sm font-normal text-slate-700">Meals</p>
+                    <p className="mt-1 text-xs text-slate-500">
                       Add at least one meal to your plan
                     </p>
                   </div>
@@ -709,7 +729,7 @@ const MealPlans = () => {
                   <button
                     type="button"
                     onClick={addMealEntry}
-                    className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#0B5FFF] hover:text-[#0642C4]"
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-bold text-blue-600"
                   >
                     <Plus size={18} />
                     Add Meal
@@ -723,20 +743,24 @@ const MealPlans = () => {
                     return (
                       <div
                         key={index}
-                        className="rounded-xl border border-[#CFE1FF] bg-[#F4F8FF] p-3"
+                        className="rounded-xl border border-blue-100 bg-blue-50/60 p-3"
                       >
-                        
                         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-                         
                           <div className="flex w-full items-start gap-2 sm:min-w-[180px] sm:flex-1">
                             <div className="min-w-0 flex-1">
                               <select
                                 value={entry.recipeId}
                                 onChange={(event) =>
-                                  updateMealEntry(index, "recipeId", event.target.value)
+                                  updateMealEntry(
+                                    index,
+                                    "recipeId",
+                                    event.target.value,
+                                  )
                                 }
                                 className={
-                                  mealError.recipeId ? errorInputClass : inputClass
+                                  mealError.recipeId
+                                    ? errorInputClass
+                                    : inputClass
                                 }
                               >
                                 <option value="">Select Recipe</option>
@@ -749,7 +773,7 @@ const MealPlans = () => {
                               </select>
 
                               {mealError.recipeId && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs font-medium text-red-600">
                                   {mealError.recipeId}
                                 </p>
                               )}
@@ -759,7 +783,7 @@ const MealPlans = () => {
                               type="button"
                               onClick={() => removeMealEntry(index)}
                               title="Remove meal"
-                              className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl text-red-400 transition hover:bg-red-50 hover:text-red-600 sm:hidden"
+                              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl text-red-500 hover:bg-red-50 sm:hidden"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -772,15 +796,21 @@ const MealPlans = () => {
                               min={startDate}
                               max={endDate}
                               onChange={(event) =>
-                                updateMealEntry(index, "plannedDate", event.target.value)
+                                updateMealEntry(
+                                  index,
+                                  "plannedDate",
+                                  event.target.value,
+                                )
                               }
                               className={
-                                mealError.plannedDate ? errorInputClass : inputClass
+                                mealError.plannedDate
+                                  ? errorInputClass
+                                  : inputClass
                               }
                             />
 
                             {mealError.plannedDate && (
-                              <p className="mt-1 text-xs text-red-500">
+                              <p className="mt-1 text-xs font-medium text-red-600">
                                 {mealError.plannedDate}
                               </p>
                             )}
@@ -790,9 +820,17 @@ const MealPlans = () => {
                             <select
                               value={entry.mealType}
                               onChange={(event) =>
-                                updateMealEntry(index, "mealType", event.target.value)
+                                updateMealEntry(
+                                  index,
+                                  "mealType",
+                                  event.target.value,
+                                )
                               }
-                              className={mealError.mealType ? errorInputClass : inputClass}
+                              className={
+                                mealError.mealType
+                                  ? errorInputClass
+                                  : inputClass
+                              }
                             >
                               <option value="">Meal Type</option>
                               <option value="BREAKFAST">Breakfast</option>
@@ -802,7 +840,7 @@ const MealPlans = () => {
                             </select>
 
                             {mealError.mealType && (
-                              <p className="mt-1 text-xs text-red-500">
+                              <p className="mt-1 text-xs font-medium text-red-600">
                                 {mealError.mealType}
                               </p>
                             )}
@@ -814,25 +852,32 @@ const MealPlans = () => {
                               min="1"
                               value={entry.servings}
                               onChange={(event) =>
-                                updateMealEntry(index, "servings", event.target.value)
+                                updateMealEntry(
+                                  index,
+                                  "servings",
+                                  event.target.value,
+                                )
                               }
                               placeholder="Servings"
-                              className={mealError.servings ? errorInputClass : inputClass}
+                              className={
+                                mealError.servings
+                                  ? errorInputClass
+                                  : inputClass
+                              }
                             />
 
                             {mealError.servings && (
-                              <p className="mt-1 text-xs text-red-500">
+                              <p className="mt-1 text-xs font-medium text-red-600">
                                 {mealError.servings}
                               </p>
                             )}
                           </div>
 
-                         
                           <button
                             type="button"
                             onClick={() => removeMealEntry(index)}
                             title="Remove meal"
-                            className="hidden h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl text-red-400 transition hover:bg-red-50 hover:text-red-600 sm:flex"
+                            className="hidden h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl text-red-500 hover:bg-red-50 sm:flex"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -843,12 +888,12 @@ const MealPlans = () => {
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-[#EEF2FA] bg-white px-5 py-4 sm:flex-row sm:justify-end">
+              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={closeForm}
                   disabled={loading}
-                  className="rounded-lg px-5 py-2.5 text-sm font-medium text-[#5B6B8C] hover:bg-[#F6F8FC]"
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50"
                 >
                   Cancel
                 </button>
@@ -856,7 +901,7 @@ const MealPlans = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0B5FFF] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0642C4] disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={15} className="animate-spin" />}
                   {editId ? "Update Meal Plan" : "Create Meal Plan"}
@@ -868,13 +913,15 @@ const MealPlans = () => {
       )}
 
       {deletePlan && (
-        <div className="fixed inset-0 z-[2500] flex items-center justify-center bg-slate-900/45 p-3">
-          <div className="w-full max-w-[380px] rounded-2xl bg-white p-5 shadow-2xl">
-            <h3 className="text-base font-bold text-[#0B1B3F]">Delete meal plan</h3>
+        <div className="fixed inset-0 z-[2500] flex items-center justify-center bg-slate-400/20 p-3">
+          <div className="w-full max-w-[380px] rounded-2xl bg-white p-5 text-left shadow-lg">
+            <h3 className="text-sm font-normal text-slate-700">
+              Delete meal plan
+            </h3>
 
-            <p className="mt-2 text-sm text-[#7C8AA6]">
-              This will permanently delete "{deletePlan.name}". This action cannot be
-              undone.
+            <p className="mt-2 text-sm font-normal text-slate-700">
+              This will permanently delete "{deletePlan.name}". This action
+              cannot be undone.
             </p>
 
             <div className="mt-5 flex justify-end gap-2">
@@ -882,7 +929,7 @@ const MealPlans = () => {
                 type="button"
                 onClick={closeDeletePopup}
                 disabled={loading}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B8C] hover:bg-[#F6F8FC]"
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50"
               >
                 Cancel
               </button>
@@ -891,7 +938,7 @@ const MealPlans = () => {
                 type="button"
                 onClick={handleDelete}
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
               >
                 {loading && <Loader2 size={14} className="animate-spin" />}
                 Delete
