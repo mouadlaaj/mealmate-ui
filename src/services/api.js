@@ -406,3 +406,23 @@ export const searchIngredients = async (search = "") => {
     throw error.response?.data || error;
   }
 };
+
+export const importRecipe = async ({ url, file }) => {
+  const token = localStorage.getItem("authToken");
+  const formData = new FormData();
+
+  if (url) formData.append("url", url);
+  if (file) formData.append("file", file);
+
+  try {
+    const res = await axios.post(`${API_URL}/recipes/import`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      timeout: 75000,
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

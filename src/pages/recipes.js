@@ -13,6 +13,8 @@ import {
   Search,
   MoreVertical,
   ChefHat,
+  Upload,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -22,6 +24,7 @@ import {
   updateRecipe,
   deleteRecipe,
   searchIngredients,
+  importRecipe,
 } from "../services/api";
 
 const getErrorMessage = (error) => {
@@ -379,6 +382,11 @@ const Recipes = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importFile, setImportFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importedDraft, setImportedDraft] = useState(false);
 
   const [editId, setEditId] = useState(null);
 
@@ -448,6 +456,7 @@ const Recipes = () => {
 
   const handleAddOpen = () => {
     setEditId(null);
+    setImportedDraft(false);
     setFormErrors(initialFormErrors);
     setFormData(initialFormData);
     setFormOpen(true);
@@ -458,11 +467,64 @@ const Recipes = () => {
     setEditId(null);
     setFormErrors(initialFormErrors);
     setFormData(initialFormData);
+    setImportedDraft(false);
+  };
+
+  const handleImportClose = () => {
+    if (importLoading) return;
+    setImportOpen(false);
+    setImportUrl("");
+    setImportFile(null);
+  };
+
+  const handleImport = async () => {
+    const hasUrl = Boolean(importUrl.trim());
+    const hasFile = Boolean(importFile);
+    if (hasUrl === hasFile) {
+      toast.error("Choose either one recipe URL or one file");
+      return;
+    }
+
+    try {
+      setImportLoading(true);
+      const draft = await importRecipe({
+        url: hasUrl ? importUrl.trim() : null,
+        file: hasFile ? importFile : null,
+      });
+      setEditId(null);
+      setFormErrors(initialFormErrors);
+      setFormData({
+        title: draft.title || "",
+        description: draft.description || "",
+        servings: draft.servings || "",
+        category: draft.category || "",
+        preparationTime: draft.preparationTime || "",
+        preparationSteps: draft.preparationSteps || "",
+        ingredients:
+          draft.ingredients?.map((ingredient) => ({
+            ingredientName: ingredient.ingredientName || "",
+            amount: ingredient.amount || "",
+            unit: ingredient.unit || "",
+          })) || [{ ...emptyIngredient }],
+      });
+      setImportedDraft(true);
+      setImportOpen(false);
+      setImportUrl("");
+      setImportFile(null);
+      setFormOpen(true);
+      toast.success("Recipe understood — review it before saving");
+    } catch (error) {
+      console.error("Failed to import recipe:", error);
+      toast.error(getErrorMessage(error) || "Failed to understand this recipe");
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const handleEditOpen = async (recipeId) => {
     try {
       setActionLoading(true);
+      setImportedDraft(false);
       setFormErrors(initialFormErrors);
 
       const response = await getRecipeById(recipeId);
@@ -652,12 +714,20 @@ const Recipes = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleAddOpen}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
-        >
-          <Plus size={18} /> Add Recipe
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100"
+          >
+            <Sparkles size={18} /> Import with AI
+          </button>
+          <button
+            onClick={handleAddOpen}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+          >
+            <Plus size={18} /> Add Recipe
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-row flex-nowrap items-center gap-2 sm:gap-3">
@@ -719,8 +789,74 @@ const Recipes = () => {
         </div>
       )}
 
+      <Modal open={importOpen} onClose={handleImportClose} maxWidth="max-w-lg">
+        <ModalHeader title="Import Recipe with AI" />
+        <div className="space-y-5 px-6 py-5 text-left">
+          <p className="text-sm leading-relaxed text-slate-600">
+            Paste a public recipe webpage or upload a recipe document. MealMate
+            will extract the details with Groq and open an editable draft.
+          </p>
+          <Field label="Recipe webpage URL">
+            <input
+              type="url"
+              value={importUrl}
+              onChange={(event) => {
+                setImportUrl(event.target.value);
+                if (event.target.value) setImportFile(null);
+              }}
+              placeholder="https://example.com/my-recipe"
+              disabled={Boolean(importFile)}
+              className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400`}
+            />
+          </Field>
+          <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" /> or
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+          <Field label="Recipe file">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/60 px-4 py-6 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+              <Upload size={19} />
+              {importFile ? importFile.name : "Choose PDF, Word, text, or HTML"}
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.html,.htm"
+                className="sr-only"
+                disabled={Boolean(importUrl.trim())}
+                onChange={(event) => {
+                  const selected = event.target.files?.[0] || null;
+                  if (selected && selected.size > 10 * 1024 * 1024) {
+                    toast.error("Recipe files must be 10 MB or smaller");
+                    event.target.value = "";
+                    return;
+                  }
+                  setImportFile(selected);
+                  if (selected) setImportUrl("");
+                }}
+              />
+            </label>
+            <p className="mt-1.5 text-xs text-slate-400">Maximum file size: 10 MB</p>
+          </Field>
+        </div>
+        <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <button
+            onClick={handleImportClose}
+            disabled={importLoading}
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleImport}
+            disabled={importLoading || (!importUrl.trim() && !importFile)}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Sparkles size={16} /> {importLoading ? "Understanding..." : "Create Draft"}
+          </button>
+        </div>
+      </Modal>
+
       <Modal open={formOpen} onClose={handleFormClose} maxWidth="max-w-3xl">
-        <ModalHeader title={editId ? "Edit Recipe" : "Add New Recipe"} />
+        <ModalHeader title={editId ? "Edit Recipe" : importedDraft ? "Review Imported Recipe" : "Add New Recipe"} />
 
         <div className="px-6 py-5 text-left">
           <div className="space-y-5">
